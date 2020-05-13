@@ -227,6 +227,7 @@ properties:
         items:
           - enum:
               - fsl,imx8mm-evk            # i.MX8MM EVK Board
+              - fsl,imx8mm-navq            # i.MX8MM NavQ Board
           - const: fsl,imx8mm
 
       - description: i.MX8MN based Boards
