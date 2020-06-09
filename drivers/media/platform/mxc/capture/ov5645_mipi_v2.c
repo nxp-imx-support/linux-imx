@@ -2344,6 +2344,21 @@ static int ov5645_regulator_enable(struct device *dev)
 	return ret;
 }
 
+static void ov5645_regulator_disable(void)
+{
+	if (gpo_regulator)
+		regulator_disable(gpo_regulator);
+
+	if (analog_regulator)
+		regulator_disable(analog_regulator);
+
+	if (core_regulator)
+		regulator_disable(core_regulator);
+
+	if (io_regulator)
+		regulator_disable(io_regulator);
+}
+
 static s32 ov5645_write_reg(u16 reg, u8 val)
 {
 	u8 au8Buf[3] = {0};
@@ -3016,14 +3031,7 @@ static int ov5645_s_power(struct v4l2_subdev *sd, int on)
 			if (regulator_enable(analog_regulator) != 0)
 				return -EIO;
 	} else if (!on && sensor->on) {
-		if (analog_regulator)
-			regulator_disable(analog_regulator);
-		if (core_regulator)
-			regulator_disable(core_regulator);
-		if (io_regulator)
-			regulator_disable(io_regulator);
-		if (gpo_regulator)
-			regulator_disable(gpo_regulator);
+		ov5645_regulator_disable();
 	}
 
 	sensor->on = on;
@@ -3505,12 +3513,14 @@ static int ov5645_probe(struct i2c_client *client,
 	retval = ov5645_read_reg(OV5645_CHIP_ID_HIGH_BYTE, &chip_id_high);
 	if (retval < 0 || chip_id_high != 0x56) {
 		pr_warning("camera ov5645_mipi is not found\n");
+		ov5645_regulator_disable();
 		clk_disable_unprepare(ov5645_data.sensor_clk);
 		return -ENODEV;
 	}
 	retval = ov5645_read_reg(OV5645_CHIP_ID_LOW_BYTE, &chip_id_low);
 	if (retval < 0 || chip_id_low != 0x45) {
 		pr_warning("camera ov5645_mipi is not found\n");
+		ov5645_regulator_disable();
 		clk_disable_unprepare(ov5645_data.sensor_clk);
 		return -ENODEV;
 	}
@@ -3553,17 +3563,7 @@ static int ov5645_remove(struct i2c_client *client)
 
 	ov5645_power_down(1);
 
-	if (gpo_regulator)
-		regulator_disable(gpo_regulator);
-
-	if (analog_regulator)
-		regulator_disable(analog_regulator);
-
-	if (core_regulator)
-		regulator_disable(core_regulator);
-
-	if (io_regulator)
-		regulator_disable(io_regulator);
+	ov5645_regulator_disable();
 
 	return 0;
 }
