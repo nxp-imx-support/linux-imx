@@ -2951,7 +2951,9 @@ static int ov5645_init_mode(enum ov5645_frame_rate frame_rate,
 		ArySize = ARRAY_SIZE(ov5645_setting_15fps_QSXGA_2592_1944);
 		retval = ov5645_download_firmware(pModeSetting, ArySize);
 
-		ov5645_dnld_af_fw();
+		// Temporarily disabled the auto focus fw download due to the
+		// long delay on kernel boot.
+		//ov5645_dnld_af_fw();
 
 	} else if ((dn_mode == SUBSAMPLING && orig_dn_mode == SCALING) ||
 			(dn_mode == SCALING && orig_dn_mode == SUBSAMPLING)) {
