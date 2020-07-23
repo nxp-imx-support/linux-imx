@@ -429,9 +429,10 @@
 			status = "okay";
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_csi1>;
-			clocks = <&clk IMX8MM_CLK_CLKO1>;
+			clocks = <&clk IMX8MM_CLK_CLKOUT1_CG>;
 			clock-names = "csi_mclk";
-			assigned-clocks = <&clk IMX8MM_CLK_CLKO1>;
+			assigned-clocks = <&clk IMX8MM_CLK_CLKOUT1_SRC>,
+				<&clk IMX8MM_CLK_CLKOUT1_DIV>;
 			assigned-clock-parents = <&clk IMX8MM_CLK_24M>;
 			assigned-clock-rates = <24000000>;
 			csi_id = <0>;
