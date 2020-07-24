@@ -29,6 +29,7 @@ struct tcpci {
 	struct regmap *regmap;
 
 	bool controls_vbus;
+	u8 fault_status_mask;
 
 	struct tcpc_dev tcpc;
 	struct tcpci_data *data;
@@ -367,6 +368,11 @@ static int tcpci_pd_transmit(struct tcpc_dev *tcpc,
 	reg = (PD_RETRY_COUNT << TCPC_TRANSMIT_RETRY_SHIFT) |
 		(type << TCPC_TRANSMIT_TYPE_SHIFT);
 	ret = regmap_write(tcpci->regmap, TCPC_TRANSMIT, reg);
+
+	/* Restore the mask after, it may reset after the "hard reset" command */
+	if (tcpci->fault_status_mask)
+		regmap_write(tcpci->regmap, TCPC_FAULT_STATUS_MASK, tcpci->fault_status_mask);
+
 	if (ret < 0)
 		return ret;
 
@@ -595,8 +601,10 @@ static int tcpci_probe(struct i2c_client *client,
 		       const struct i2c_device_id *i2c_id)
 {
 	struct tcpci_chip *chip;
+	struct device *dev = &client->dev;
 	int err;
 	u16 val = 0;
+	u32 val32 = 0;
 
 	chip = devm_kzalloc(&client->dev, sizeof(*chip), GFP_KERNEL);
 	if (!chip)
@@ -618,6 +626,15 @@ static int tcpci_probe(struct i2c_client *client,
 	if (IS_ERR(chip->tcpci))
 		return PTR_ERR(chip->tcpci);
 
+	err = of_property_read_u32(dev->of_node, "fault-status-mask", &val32);
+	if (!err) {
+		val32 &= 0xff;
+		chip->tcpci->fault_status_mask = val32;
+		err = regmap_raw_write(chip->data.regmap, TCPC_FAULT_STATUS_MASK, &val32,
+			       sizeof(u8));
+		if (err < 0)
+			return err;
+	}
 	irq_set_status_flags(client->irq, IRQ_DISABLE_UNLAZY);
 	err = devm_request_threaded_irq(&client->dev, client->irq, NULL,
 					_tcpci_irq,

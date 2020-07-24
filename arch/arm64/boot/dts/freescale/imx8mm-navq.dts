@@ -374,6 +374,7 @@
 		interrupt-parent = <&gpio4>;
 		interrupts = <21 8>;
 		status = "okay";
+		fault-status-mask = <0xef>;
 
 		port {
 			typec1_dr_sw: endpoint {
